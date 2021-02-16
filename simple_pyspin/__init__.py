@@ -226,10 +226,16 @@ class Camera:
         else:
             img = self.cam.GetNextImage(PySpin.EVENT_TIMEOUT_INFINITE if wait else PySpin.EVENT_TIMEOUT_NONE)
 
+        img_array = img.GetNDArray()
         if get_chunk:
-            return img.GetNDArray(), img.GetChunkData()
+            img_chunk = img.GetChunkData()
+
+        img.Release()
+
+        if get_chunk:
+            return img_array, img_chunk
         else:
-            return img.GetNDArray()
+            return img_array
 
     def __getattr__(self, attr):
         if attr in self.camera_attributes:
