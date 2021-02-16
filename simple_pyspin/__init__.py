@@ -186,7 +186,7 @@ class Camera:
             self.cam.EndAcquisition()
         self.running = False
 
-    def get_image(self, wait=True):
+    def get_image(self, wait=True, timeout=None):
         '''Get an image from the camera.
 
         Parameters
@@ -199,9 +199,12 @@ class Camera:
         -------
         img : PySpin Image
         '''
-        return self.cam.GetNextImage(PySpin.EVENT_TIMEOUT_INFINITE if wait else PySpin.EVENT_TIMEOUT_NONE)
+        if timeout is not None:
+            return self.cam.GetNextImage(timeout)
+        else:
+            return self.cam.GetNextImage(PySpin.EVENT_TIMEOUT_INFINITE if wait else PySpin.EVENT_TIMEOUT_NONE)
 
-    def get_array(self, wait=True, get_chunk=False):
+    def get_array(self, wait=True, get_chunk=False, timeout=None):
         '''Get an image from the camera, and convert it to a numpy array.
 
         Parameters
@@ -218,7 +221,10 @@ class Camera:
         chunk : PySpin (only if get_chunk == True)
         '''
 
-        img = self.cam.GetNextImage(PySpin.EVENT_TIMEOUT_INFINITE if wait else PySpin.EVENT_TIMEOUT_NONE)
+        if timeout is not None:
+            img = self.cam.GetNextImage(timeout)            
+        else:
+            img = self.cam.GetNextImage(PySpin.EVENT_TIMEOUT_INFINITE if wait else PySpin.EVENT_TIMEOUT_NONE)
 
         if get_chunk:
             return img.GetNDArray(), img.GetChunkData()
