@@ -221,17 +221,21 @@ class Camera:
         chunk : PySpin (only if get_chunk == True)
         '''
 
-        if timeout is not None:
-            img = self.cam.GetNextImage(timeout)            
-        else:
-            img = self.cam.GetNextImage(PySpin.EVENT_TIMEOUT_INFINITE if wait else PySpin.EVENT_TIMEOUT_NONE)
+        try:
+            if timeout is not None:
+                img = self.cam.GetNextImage(timeout)            
+            else:
+                img = self.cam.GetNextImage(PySpin.EVENT_TIMEOUT_INFINITE if wait else PySpin.EVENT_TIMEOUT_NONE)
 
-        img_array = img.GetNDArray()
-        if get_chunk:
-            img_chunk = img.GetChunkData()
+            img_array = img.GetNDArray()
+            if get_chunk:
+                img_chunk = img.GetChunkData()
 
-        img.Release()
-
+            img.Release()
+        except PySpin.SpinnakerException as ex:
+            img_array = None
+            img_chunk = None
+            
         if get_chunk:
             return img_array, img_chunk
         else:
