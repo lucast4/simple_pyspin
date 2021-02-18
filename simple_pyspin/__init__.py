@@ -204,7 +204,7 @@ class Camera:
         else:
             return self.cam.GetNextImage(PySpin.EVENT_TIMEOUT_INFINITE if wait else PySpin.EVENT_TIMEOUT_NONE)
 
-    def get_array(self, wait=True, get_chunk=False, timeout=None):
+    def get_array(self, wait=True, get_chunk=False, timeout=None, get_timestamp=False):
         '''Get an image from the camera, and convert it to a numpy array.
 
         Parameters
@@ -220,26 +220,45 @@ class Camera:
         img : Numpy array
         chunk : PySpin (only if get_chunk == True)
         '''
-
+        # if get_timestamp:
+        #     assert False, "GetTimestamp() doesnt seewm to be a method."
         try:
             if timeout is not None:
                 img = self.cam.GetNextImage(timeout)            
             else:
                 img = self.cam.GetNextImage(PySpin.EVENT_TIMEOUT_INFINITE if wait else PySpin.EVENT_TIMEOUT_NONE)
 
-            img_array = img.GetNDArray()
-            if get_chunk:
+            if not img.IsIncomplete():
+                img_array = img.GetNDArray()
                 img_chunk = img.GetChunkData()
-
+                tstamp = img.GetTimeStamp()
+            else:
+                img_array = None
+                img_chunk = None
+                tstamp = None
             img.Release()
+
         except PySpin.SpinnakerException as ex:
             img_array = None
             img_chunk = None
-            
-        if get_chunk:
-            return img_array, img_chunk
-        else:
+            tstamp = None
+
+        # out = [img_array]
+        # if get_chunk:
+        #     out.append(img_chunk)
+        # if get_timestamp:
+        #     out.append(img.GetTimestamp())
+        # return out
+        if not get_chunk and not get_timestamp:
             return img_array
+        elif get_chunk and not get_timestamp:
+            return img_array, img_chunk
+        elif not get_chunk and get_timestamp:
+            return img_array, tstamp
+        elif get_chunk and get_timestamp:
+            return img_array, img_chunk, tstamp
+        else:
+            assert False
 
     def __getattr__(self, attr):
         if attr in self.camera_attributes:
